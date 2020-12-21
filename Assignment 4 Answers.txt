@@ -1,0 +1,117 @@
+1. b)
+
+A0 = 101.77631774
+
+A1 = 0.0221148241
+
+A2 = 0.2013397296
+
+A3 = -0.000127204
+
+A4 = -0.001656356
+
+A5 = -0.000147607
+
+No it is unlikely that two groups or more would share identical coefficient values as it is highly unlikely that two groups would have selected the same number and pixel locations of the background in ‘rice.png’. However, it can be expected that all groups share relatively similar values given that all groups have properly selected the dark background.
+
+1. d)
+
+It is evident that the function level worked properly from the graph shown:
+
+The dotted graph representing the unlevelled(original) image shows a pattern where there is a decline in gray levels for pixels that are near the end of the graph. Going back to how the unlevelled image looked like, the image had a darker shade towards the bottom of the picture compared to the top. This results in pixels with gray levels that are smaller than the pixels at the top. This falls directly in line with the pattern seen from the dotted graph from the plot. The right side of the graph representing the pixels that are lower down shows lower gray levels than the values on the left side of the graph. Contrastingly, the levelled image shows pixels that are even in gray levels all throughout the column. The intermittent spikes in both plots represent the rice grain.
+
+you should explain based on the plot you got in part (c). The function seems to be working correctly. The leveled image has an approximately flat background that is closer to zero gray level than the original background. This is what the level function is supposed to do. -0.1
+
+2. a)
+
+function [im2, a] = autolevel_9( fname )
+% LEVEL  Levels background of an image.
+%
+% USAGE: [im2, a] = level( fname ) where 'fname' is a string representing
+% the filename of the file containing the image, 'im2' is the levelled
+% image, and 'a' is a vector of the 6 unknown coefficients.
+
+% Read in image and display it
+im = imread( fname );
+imshow(im);
+
+%Set up initial conditions
+i=1;
+M = 16;
+N = 16;
+
+%Two loop that run through all sub-images
+for m = 1:M
+    for n = 1:N
+        %Create a sub-image
+        subim=im((m-1)*256/M+1:m*256/M ,(n-1)*256/N+1:n*256/N);
+        %Find the minimum greyscale
+        I(i)=min(min(subim));
+        %Find the corrdinate of the pixel with minimum greyscale
+        [row,col]=find(subim==I(i));
+        %Storing the corrdinates into x and y
+        y(i)=row(1)+(m-1)*256/M;
+        x(i)=col(1)+(n-1)*256/N;
+        %Display the original image with dots
+        imshow(im)
+        hold on
+        plot(x, y, 'y+')
+        %For looping
+        i=i+1;
+    end
+end
+
+%Type-cast I into double
+I= double(I);
+
+
+% Fit data at selected points to background function
+%  Solve least-squares problem: [C]{a} = {k} using the
+%    \ operator, i.e., {a} = [C]\{k}
+%  First, compute elements of the matrix [C]
+N = length(x);
+Sx = sum(x);
+Sy = sum(y);
+Sxx = sum(x.*x);
+Syy = sum(y.*y);
+Sxy = sum(x.*y);
+Sxxx = sum(x.^3);
+Sxxy = sum(x.*x.*y);
+Sxyy = sum(x.*y.*y);
+Syyy = sum(y.^3);
+Sxxxx = sum(x.^4);
+Sxxxy = sum(y.*x.^3);
+Sxxyy = sum(x.*x.*y.*y);
+Sxyyy = sum(x.*y.^3);
+Syyyy = sum(y.^4);
+C = [N    Sx  Sy   Sxx   Syy   Sxy;
+    Sx   Sxx Sxy  Sxxx  Sxyy  Sxxy;
+    Sy   Sxy Syy  Sxxy  Syyy  Sxyy;
+    Sxx Sxxx Sxxy Sxxxx Sxxyy Sxxxy;
+    Syy Sxyy Syyy Sxxyy Syyyy Sxyyy;
+    Sxy Sxxy Sxyy Sxxxy Sxyyy Sxxyy];
+% Construct {k} 
+SI = sum(I);
+SxI = sum(x.*I);
+SyI = sum(y.*I);
+SxxI = sum(x.*x.*I);
+SyyI = sum(y.*y.*I);
+SxyI = sum(x.*y.*I);
+k = [SI SxI SyI SxxI SyyI SxyI]';
+% Solve
+a = C\k;
+
+% Remove background
+% First compute background image
+[rows, cols] = size(im);
+[x, y] = meshgrid( 1:cols, 1:rows );
+back = a(1) + a(2)*x + a(3)*y + a(4)*x.*x + a(5)*y.*y +a(6)*x.*y;
+im2 = double(im) - back;
+im2 = mat2gray(im2); % Convert matrix of type double to image of type double
+im2 = im2uint8(im2); % Convert to uint8 image. Although you were not asked
+                     % to do this, it is useful to make output same type as
+                     % input image.
+
+2. c)
+
+Our group used values of 16 for M and N as the image, being 256 by 256, was completely divisible by 16. This results in 256 sub-matrices or 256 automatically generated values that would be used for levelling. Aside from the divisibility factor, it should be noted that each sub-matrix should be large enough so that there would be at least one pixel that includes the background – in other words, the sub-matrix cannot be smaller than a rice grain.
